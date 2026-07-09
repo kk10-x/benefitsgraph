@@ -1,0 +1,88 @@
+openapi: 3.0.3
+info:
+  title: BenefitsGraph API
+  version: 0.1.0
+  description: Employee health benefits eligibility & claims adjudication API.
+
+servers:
+  - url: http://localhost:3000
+
+paths:
+  /employees:
+    post:
+      summary: Enroll an employee against an employer's policy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [externalId, fullName, employerName, planName]
+              properties:
+                externalId: { type: string }
+                fullName: { type: string }
+                employerName: { type: string }
+                planName: { type: string }
+      responses:
+        "201": { description: Employee enrolled }
+        "404": { description: Policy not found }
+
+  /employees/{externalId}:
+    get:
+      summary: Fetch an employee's enrollment and policy details
+      parameters:
+        - name: externalId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Employee found }
+        "404": { description: Employee not found }
+
+  /claims:
+    post:
+      summary: Submit a claim for adjudication
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employeeExternalId, claimType, billedAmountPaise]
+              properties:
+                employeeExternalId: { type: string }
+                claimType: { type: string, example: opd }
+                billedAmountPaise: { type: integer, minimum: 1 }
+                providerRef: { type: string }
+      responses:
+        "201": { description: Claim adjudicated (approved, partial, or denied) }
+        "400": { description: Validation error or missing Idempotency-Key }
+        "409": { description: Duplicate request currently in flight }
+
+  /claims/{id}:
+    get:
+      summary: Fetch a claim by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: Claim found }
+        "404": { description: Claim not found }
+
+  /audit/claims/{claimId}:
+    get:
+      summary: Fetch the audit trail for a claim
+      parameters:
+        - name: claimId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200": { description: Ordered list of audit events for the claim }

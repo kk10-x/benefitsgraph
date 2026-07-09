@@ -1,0 +1,67 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: benefitsgraph
+      POSTGRES_PASSWORD: benefitsgraph
+      POSTGRES_DB: benefitsgraph
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U benefitsgraph"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mock-insurer:
+    build:
+      context: .
+      dockerfile: mock-insurer/Dockerfile
+    ports:
+      - "4001:4001"
+
+  mock-provider:
+    build:
+      context: .
+      dockerfile: mock-provider/Dockerfile
+    ports:
+      - "4002:4002"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://benefitsgraph:benefitsgraph@postgres:5432/benefitsgraph
+      REDIS_URL: redis://redis:6379
+      INSURER_SERVICE_URL: http://mock-insurer:4001
+      PROVIDER_SERVICE_URL: http://mock-provider:4002
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mock-insurer:
+        condition: service_started
+      mock-provider:
+        condition: service_started
+
+volumes:
+  pgdata:
