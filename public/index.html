@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>BenefitsGraph — health-insurance claims adjudication API</title>
+<meta name="description" content="A REST API that adjudicates health-insurance claims against versioned, per-employer policy rules — with idempotent submission, a full audit trail, and one-click sandboxes." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#020617; --panel:#0b1220; --muted:#0f172a; --border:#1e293b;
+    --fg:#f8fafc; --dim:#94a3b8; --accent:#22c55e; --accent-2:#16a34a;
+    --radius:14px; --maxw:1080px;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f8fafc; --panel:#ffffff; --muted:#f1f5f9; --border:#e2e8f0;
+           --fg:#0f172a; --dim:#475569; --accent:#16a34a; --accent-2:#15803d; }
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);
+       line-height:1.6;-webkit-font-smoothing:antialiased;
+       background-image:radial-gradient(60rem 40rem at 70% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%);}
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+
+  header{position:sticky;top:0;z-index:20;backdrop-filter:blur(10px);
+         background:color-mix(in srgb, var(--bg) 82%, transparent);
+         border-bottom:1px solid var(--border)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.02em;font-size:18px}
+  .brand .dot{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+              box-shadow:0 0 14px color-mix(in srgb,var(--accent) 55%,transparent);flex:none}
+  .nav-links{display:flex;align-items:center;gap:8px}
+  .nav-links a{padding:8px 14px;border-radius:10px;color:var(--dim);font-size:14px;font-weight:500;
+               transition:color .2s ease, background .2s ease}
+  .nav-links a:hover{color:var(--fg);background:var(--muted)}
+  .nav-links a.gh{display:inline-flex;align-items:center;gap:7px}
+
+  .hero{padding:96px 0 64px;text-align:center}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--border);
+        border-radius:999px;background:var(--panel);color:var(--dim);font-size:13px;font-weight:500;margin-bottom:26px}
+  .pill .live{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  h1{font-size:clamp(34px,6vw,60px);line-height:1.05;letter-spacing:-.03em;margin:0 0 20px;font-weight:700}
+  h1 .g{background:linear-gradient(120deg,var(--accent),#67e8f9);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{max-width:640px;margin:0 auto 36px;font-size:clamp(16px,2.2vw,20px);color:var(--dim)}
+  .cta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:12px;font-size:15px;
+       font-weight:600;font-family:inherit;cursor:pointer;border:1px solid transparent;transition:transform .15s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .btn-primary{background:var(--accent);color:#04120a;box-shadow:0 8px 30px color-mix(in srgb,var(--accent) 30%,transparent)}
+  .btn-primary:hover{background:var(--accent-2);transform:translateY(-1px)}
+  .btn-primary:disabled{opacity:.7;cursor:default;transform:none}
+  .btn-ghost{background:var(--panel);color:var(--fg);border-color:var(--border)}
+  .btn-ghost:hover{border-color:var(--dim);transform:translateY(-1px)}
+
+  .keycard{max-width:620px;margin:28px auto 0;text-align:left;border:1px solid var(--border);
+           border-radius:var(--radius);background:var(--panel);overflow:hidden}
+  .keycard .kchead{background:var(--muted);border-bottom:1px solid var(--border);
+                  padding:12px 16px;display:flex;align-items:center;gap:9px;font-size:13px;color:var(--dim);font-weight:600;letter-spacing:.02em}
+  .keycard .body{padding:16px}
+  .keyrow{display:flex;gap:10px;align-items:stretch}
+  .keyval{flex:1;min-width:0;font-family:var(--mono);font-size:13px;background:var(--bg);border:1px solid var(--border);
+          border-radius:10px;padding:11px 12px;overflow-x:auto;white-space:nowrap;color:var(--accent)}
+  .copy{flex:none;padding:0 14px;border-radius:10px;border:1px solid var(--border);background:var(--muted);
+        color:var(--fg);font-weight:600;font-size:13px;cursor:pointer;font-family:inherit;transition:border-color .2s}
+  .copy:hover{border-color:var(--dim)}
+  .keyhint{margin:14px 0 0;font-size:13.5px;color:var(--dim)}
+  .keyhint b{color:var(--fg);font-weight:600}
+  .keyhint .num{display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#04120a;
+                font-size:11px;font-weight:700;align-items:center;justify-content:center;margin-right:6px;vertical-align:1px}
+
+  section.features{padding:56px 0 24px}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+  @media (max-width:720px){.grid{grid-template-columns:1fr}}
+  .card{border:1px solid var(--border);border-radius:var(--radius);background:var(--panel);padding:22px;
+        transition:border-color .2s ease,transform .2s ease}
+  .card:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--border));transform:translateY(-2px)}
+  .card .ic{width:40px;height:40px;border-radius:10px;background:var(--muted);display:flex;align-items:center;justify-content:center;
+            color:var(--accent);margin-bottom:14px}
+  .card h3{margin:0 0 7px;font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .card p{margin:0;font-size:14px;color:var(--dim)}
+
+  .stack{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding:40px 0 8px}
+  .chip{font-family:var(--mono);font-size:12.5px;color:var(--dim);border:1px solid var(--border);
+        border-radius:999px;padding:6px 13px;background:var(--panel)}
+
+  footer{margin-top:56px;border-top:1px solid var(--border);padding:28px 0 44px;color:var(--dim);font-size:13.5px}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .foot a{color:var(--dim);transition:color .2s}
+  .foot a:hover{color:var(--fg)}
+
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap nav">
+    <div class="brand"><span class="dot"></span> BenefitsGraph</div>
+    <nav class="nav-links">
+      <a href="/docs">API Docs</a>
+      <a class="gh" href="https://github.com/kk10-x/benefitsgraph" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.9 10.9c.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7 0-.7 0-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <span class="pill"><span class="live"></span> Live sandbox · no signup</span>
+    <h1>Health claims,<br /><span class="g">adjudicated by rules.</span></h1>
+    <p class="lede">A REST API that runs insurance claims through versioned, per-employer policy rules — deductibles, co-pay, waiting periods, limits — with idempotent submission and a full audit trail. Spin up a private sandbox and try it in seconds.</p>
+    <div class="cta-row">
+      <button class="btn btn-primary" id="guestBtn" onclick="tryGuest(this)">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>
+        Try as guest
+      </button>
+      <a class="btn btn-ghost" href="/docs">Open API explorer</a>
+    </div>
+
+    <div class="keycard" id="keyPanel" hidden>
+      <div class="kchead">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2 15 8"/><path d="m18 5 2 2"/><circle cx="8.5" cy="15.5" r="5.5"/><path d="m12.5 11.5 3-3"/></svg>
+        YOUR SANDBOX API KEY
+      </div>
+      <div class="body">
+        <div class="keyrow">
+          <code class="keyval" id="keyVal">—</code>
+          <button class="copy" id="copyBtn" onclick="copyKey(this)">Copy</button>
+        </div>
+        <p class="keyhint">
+          <span><span class="num">1</span>Open the <b><a href="/docs" style="color:var(--accent)">API explorer</a></b> &nbsp; <span class="num">2</span>Click <b>Authorize</b> &nbsp; <span class="num">3</span>Paste this key &nbsp; <span class="num">4</span>Try any endpoint.</span>
+          <br /><br />Send it as the <b>X-API-Key</b> header. Your data is isolated and auto-deletes 48h after last use.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section class="features">
+      <div class="grid">
+        <div class="card">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div>
+          <h3>Versioned rules engine</h3>
+          <p>Policies are data, not code. Deductible → co-pay → sub-limit → annual cap, evaluated in order into machine-readable reason codes.</p>
+        </div>
+        <div class="card">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg></div>
+          <h3>Idempotent claims</h3>
+          <p>Every submission carries an Idempotency-Key. Retries replay the original adjudication instead of paying a claim twice.</p>
+        </div>
+        <div class="card">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg></div>
+          <h3>Full audit trail</h3>
+          <p>Every adjudication is an append-only event, queryable per claim — exactly why a claim was approved, capped, or denied.</p>
+        </div>
+        <div class="card">
+          <div class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+          <h3>Isolated sandboxes</h3>
+          <p>One click mints a private API key and workspace. Your enrolments and claims are yours alone, and everything auto-prunes after 48 hours.</p>
+        </div>
+      </div>
+
+      <div class="stack">
+        <span class="chip">TypeScript</span>
+        <span class="chip">Express</span>
+        <span class="chip">PostgreSQL</span>
+        <span class="chip">Redis</span>
+        <span class="chip">Docker</span>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <span>BenefitsGraph — a portfolio demo. Sandboxes reset every 48h.</span>
+    <span><a href="/docs">API Docs</a> &nbsp;·&nbsp; <a href="https://github.com/kk10-x/benefitsgraph" target="_blank" rel="noopener">Source on GitHub</a></span>
+  </div>
+</footer>
+
+<script>
+  async function tryGuest(btn){
+    btn.disabled = true;
+    const original = btn.innerHTML;
+    btn.textContent = "Minting sandbox…";
+    try{
+      const res = await fetch("/auth/guest", { method:"POST" });
+      if(!res.ok) throw new Error("http "+res.status);
+      const data = await res.json();
+      document.getElementById("keyVal").textContent = data.apiKey;
+      document.getElementById("keyPanel").hidden = false;
+      document.getElementById("keyPanel").scrollIntoView({behavior:"smooth", block:"center"});
+      btn.hidden = true;
+    }catch(e){
+      btn.disabled = false;
+      btn.innerHTML = original;
+      alert("Couldn't reach the API. If you just loaded the page, give it a second and retry.");
+    }
+  }
+  function copyKey(btn){
+    const v = document.getElementById("keyVal").textContent;
+    navigator.clipboard.writeText(v).then(function(){
+      const t = btn.textContent; btn.textContent = "Copied"; setTimeout(function(){ btn.textContent = t; }, 1400);
+    });
+  }
+</script>
+</body>
+</html>
