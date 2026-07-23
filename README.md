@@ -44,8 +44,8 @@ This stack was chosen over a single-service design because it's what the target 
 ```bash
 docker compose up --build
 # API on :3000, mock-insurer on :4001, mock-provider on :4002
-docker compose exec api npm run migrate
-docker compose exec api npm run seed
+docker compose exec api node dist/db/migrate.js
+docker compose exec api node dist/db/seed.js
 ```
 
 ### Locally
