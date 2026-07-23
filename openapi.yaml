@@ -7,13 +7,22 @@ info:
     **policy rules engine** — deductibles, co-pay, waiting periods and limits — with
     idempotent claim submission and a full audit trail.
 
-    ### Quick start
-    1. **GET `/policies`** — see the employer / plan pairs you can enrol against.
-    2. **POST `/employees`** — enrol someone using one of those `employerName` / `planName` pairs.
-    3. **POST `/claims`** — submit a claim for that employee (needs an `Idempotency-Key` header).
-    4. **GET `/audit/claims/{claimId}`** — see exactly how the claim was adjudicated.
+    ### Getting started
+    1. **POST `/auth/guest`** — get a free sandbox API key (the landing page's
+       *"Try as guest"* button does this for you). No signup, no password.
+    2. Click **Authorize** (top-right) and paste the key.
+    3. **GET `/policies`** — see the employer / plan pairs you can enrol against (open).
+    4. **POST `/employees`** — enrol someone using one of those pairs.
+    5. **POST `/claims`** — submit a claim (needs an `Idempotency-Key` header).
+    6. **GET `/audit/claims/{claimId}`** — see exactly how it was adjudicated.
 
-    Every request body below is pre-filled with a working example — just hit **Try it out → Execute**.
+    Every request body below is pre-filled with a working example — just **Authorize**,
+    then **Try it out → Execute**.
+
+    ### Your sandbox
+    Your key gives you an **isolated sandbox** — your enrolments and claims are yours
+    alone, so the example `EMP-1001` never collides with anyone else''s. Sandboxes are
+    automatically **wiped 48 hours** after their last request, so demo data never piles up.
 
     ### Seeded policies
     | employerName | planName | shape |
@@ -28,11 +37,31 @@ info:
 servers:
   - url: http://localhost:3000
 
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: A sandbox key from `POST /auth/guest`. Send it on every protected request.
+
+security:
+  - ApiKeyAuth: []
+
 paths:
+  /auth/guest:
+    post:
+      summary: Mint an ephemeral guest API key (no signup, no password)
+      description: Returns a sandbox `apiKey`. Paste it into **Authorize**. The sandbox and all its data are wiped 48h after last use.
+      security: []
+      responses:
+        "201": { description: A new guest key and account id }
+
   /policies:
     get:
       summary: List available employer/plan policies to enrol against
-      description: Discover valid `employerName` / `planName` values (and each plan's rules) before enrolling an employee.
+      description: Discover valid `employerName` / `planName` values (and each plan's rules). Open — no key required.
+      security: []
       responses:
         "200": { description: List of available policies }
 
@@ -76,7 +105,9 @@ paths:
                   planName: "Basic"
       responses:
         "201": { description: Employee enrolled }
+        "401": { description: Missing or invalid API key }
         "404": { description: Policy not found }
+        "409": { description: Already enrolled in this sandbox }
 
   /employees/{externalId}:
     get:
@@ -88,6 +119,7 @@ paths:
           schema: { type: string, example: "EMP-1001" }
       responses:
         "200": { description: Employee found }
+        "401": { description: Missing or invalid API key }
         "404": { description: Employee not found }
 
   /claims:
@@ -132,6 +164,7 @@ paths:
       responses:
         "201": { description: Claim adjudicated (approved, partial, or denied) }
         "400": { description: Validation error or missing Idempotency-Key }
+        "401": { description: Missing or invalid API key }
         "409": { description: Duplicate request currently in flight }
 
   /claims/{id}:
@@ -144,6 +177,7 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         "200": { description: Claim found }
+        "401": { description: Missing or invalid API key }
         "404": { description: Claim not found }
 
   /audit/claims/{claimId}:
@@ -156,3 +190,4 @@ paths:
           schema: { type: string, format: uuid }
       responses:
         "200": { description: Ordered list of audit events for the claim }
+        "401": { description: Missing or invalid API key }

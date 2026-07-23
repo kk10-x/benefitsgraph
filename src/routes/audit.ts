@@ -6,8 +6,12 @@ export const auditRouter = Router();
 auditRouter.get("/claims/:claimId", async (req, res, next) => {
   try {
     const result = await pool.query(
-      `SELECT id, event, detail, created_at FROM audit_log WHERE claim_id = $1 ORDER BY created_at ASC`,
-      [req.params.claimId]
+      `SELECT a.id, a.event, a.detail, a.created_at
+       FROM audit_log a
+       JOIN claims c ON c.id = a.claim_id
+       WHERE a.claim_id = $1 AND c.account_id = $2
+       ORDER BY a.created_at ASC`,
+      [req.params.claimId, req.accountId],
     );
     res.json({ claimId: req.params.claimId, events: result.rows });
   } catch (err) {

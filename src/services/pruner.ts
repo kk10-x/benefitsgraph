@@ -1,0 +1,34 @@
+import { pool } from "../db/pool.js";
+
+const RETENTION_HOURS = Number(process.env.SANDBOX_RETENTION_HOURS ?? 48);
+const SWEEP_INTERVAL_MS = 60 * 60 * 1000; // hourly
+
+/**
+ * Delete guest accounts idle beyond the retention window. FK cascades wipe their
+ * employees, claims and audit rows — keeping the demo pristine and minimising how
+ * long any visitor's data is retained.
+ */
+export async function pruneExpiredAccounts(): Promise<number> {
+  const result = await pool.query(
+    `DELETE FROM accounts
+     WHERE last_seen_at < now() - (($1::text) || ' hours')::interval
+     RETURNING id`,
+    [RETENTION_HOURS],
+  );
+  return result.rowCount ?? 0;
+}
+
+/** Start an hourly background sweep. Unref'd so it never keeps the process alive. */
+export function startPruner() {
+  const tick = () => {
+    pruneExpiredAccounts()
+      .then((n) => {
+        if (n > 0) console.log(`[pruner] removed ${n} expired sandbox account(s)`);
+      })
+      .catch((err) => console.error("[pruner] sweep failed", err));
+  };
+  tick();
+  const timer = setInterval(tick, SWEEP_INTERVAL_MS);
+  timer.unref();
+  return timer;
+}

@@ -19,8 +19,9 @@ export function idempotent() {
       return next(BadRequestError("Idempotency-Key header is required"));
     }
 
-    const cacheKey = `idempotency:result:${key}`;
-    const lockKey = `idempotency:lock:${key}`;
+    const scope = req.accountId ?? "anon";
+    const cacheKey = `idempotency:result:${scope}:${key}`;
+    const lockKey = `idempotency:lock:${scope}:${key}`;
 
     const cached = await redis.get(cacheKey);
     if (cached) {
