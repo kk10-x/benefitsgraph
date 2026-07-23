@@ -2,15 +2,44 @@ openapi: 3.0.3
 info:
   title: BenefitsGraph API
   version: 0.1.0
-  description: Employee health benefits eligibility & claims adjudication API.
+  description: |
+    Adjudicates employee health-insurance claims against a versioned, per-employer
+    **policy rules engine** — deductibles, co-pay, waiting periods and limits — with
+    idempotent claim submission and a full audit trail.
+
+    ### Quick start
+    1. **GET `/policies`** — see the employer / plan pairs you can enrol against.
+    2. **POST `/employees`** — enrol someone using one of those `employerName` / `planName` pairs.
+    3. **POST `/claims`** — submit a claim for that employee (needs an `Idempotency-Key` header).
+    4. **GET `/audit/claims/{claimId}`** — see exactly how the claim was adjudicated.
+
+    Every request body below is pre-filled with a working example — just hit **Try it out → Execute**.
+
+    ### Seeded policies
+    | employerName | planName | shape |
+    |---|---|---|
+    | `Northwind Traders` | `Standard` | deductible + 10% co-pay, 90-day waiting period |
+    | `Contoso Labs` | `Premium` | zero cost-share, 30-day waiting period |
+    | `Fabrikam Retail` | `Basic` | tightly capped sub-limits, long waits |
+
+    > A claim submitted right after enrolment comes back `denied / WAITING_PERIOD_NOT_MET`.
+    > That is the rules engine working correctly, not an error.
 
 servers:
   - url: http://localhost:3000
 
 paths:
+  /policies:
+    get:
+      summary: List available employer/plan policies to enrol against
+      description: Discover valid `employerName` / `planName` values (and each plan's rules) before enrolling an employee.
+      responses:
+        "200": { description: List of available policies }
+
   /employees:
     post:
       summary: Enroll an employee against an employer's policy
+      description: The `employerName` / `planName` must match a policy from **GET /policies**, otherwise you get `404 Policy not found`.
       requestBody:
         required: true
         content:
@@ -23,6 +52,28 @@ paths:
                 fullName: { type: string }
                 employerName: { type: string }
                 planName: { type: string }
+            examples:
+              contoso:
+                summary: Contoso Labs / Premium (zero cost-share)
+                value:
+                  externalId: "EMP-1001"
+                  fullName: "Ada Lovelace"
+                  employerName: "Contoso Labs"
+                  planName: "Premium"
+              northwind:
+                summary: Northwind Traders / Standard (deductible + co-pay)
+                value:
+                  externalId: "EMP-1002"
+                  fullName: "Grace Hopper"
+                  employerName: "Northwind Traders"
+                  planName: "Standard"
+              fabrikam:
+                summary: Fabrikam Retail / Basic (tightly capped)
+                value:
+                  externalId: "EMP-1003"
+                  fullName: "Alan Turing"
+                  employerName: "Fabrikam Retail"
+                  planName: "Basic"
       responses:
         "201": { description: Employee enrolled }
         "404": { description: Policy not found }
@@ -34,7 +85,7 @@ paths:
         - name: externalId
           in: path
           required: true
-          schema: { type: string }
+          schema: { type: string, example: "EMP-1001" }
       responses:
         "200": { description: Employee found }
         "404": { description: Employee not found }
@@ -42,11 +93,15 @@ paths:
   /claims:
     post:
       summary: Submit a claim for adjudication
+      description: |
+        Requires an **`Idempotency-Key`** header. Re-sending the same key replays the original
+        adjudication instead of processing the claim twice.
       parameters:
         - name: Idempotency-Key
           in: header
           required: true
-          schema: { type: string }
+          description: Any unique string per claim (a UUID works well).
+          schema: { type: string, example: "11111111-2222-3333-4444-555555555555" }
       requestBody:
         required: true
         content:
@@ -59,6 +114,21 @@ paths:
                 claimType: { type: string, example: opd }
                 billedAmountPaise: { type: integer, minimum: 1 }
                 providerRef: { type: string }
+            examples:
+              opd:
+                summary: Outpatient claim (₹2,500)
+                value:
+                  employeeExternalId: "EMP-1001"
+                  claimType: "opd"
+                  billedAmountPaise: 250000
+                  providerRef: "PRV-1001"
+              dental:
+                summary: Dental claim (₹10,000 — sub-limit applies)
+                value:
+                  employeeExternalId: "EMP-1001"
+                  claimType: "dental"
+                  billedAmountPaise: 1000000
+                  providerRef: "PRV-1001"
       responses:
         "201": { description: Claim adjudicated (approved, partial, or denied) }
         "400": { description: Validation error or missing Idempotency-Key }
