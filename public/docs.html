@@ -84,7 +84,16 @@
   .swagger-ui table thead tr td,.swagger-ui table thead tr th,.swagger-ui .tab li,
   .swagger-ui label,.swagger-ui .responses-inner h4,.swagger-ui .responses-inner h5{color:var(--fg)}
   .swagger-ui .parameter__type,.swagger-ui .prop-format,.swagger-ui .parameter__in{color:var(--dim)}
-  .swagger-ui .opblock-section-header{background:var(--muted);border-color:var(--border);box-shadow:none}
+  /* Swagger ships `.swagger-ui .opblock .opblock-section-header` (3 classes), so the
+     theme override has to match that specificity or the light bar wins. */
+  .swagger-ui .opblock .opblock-section-header{background:var(--muted);border-color:var(--border);box-shadow:none}
+  .swagger-ui .opblock .opblock-section-header h4,
+  .swagger-ui .opblock .opblock-section-header>label,
+  .swagger-ui .opblock .opblock-section-header label span,
+  .swagger-ui .opblock .opblock-section-header .tab li{color:var(--fg)}
+  .swagger-ui .opblock .opblock-section-header .btn.try-out__btn{background:transparent;border-color:var(--border);color:var(--fg)}
+  .swagger-ui .tab li.active,.swagger-ui .tab li{color:var(--fg)}
+  .swagger-ui .opblock-body .opblock-section .parameters-col_description input{width:100%}
   .swagger-ui table tbody tr td{border-color:var(--border);color:var(--fg)}
 
   .swagger-ui input[type=text],.swagger-ui input[type=password],.swagger-ui input[type=email],
