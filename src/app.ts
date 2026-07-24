@@ -5,7 +5,7 @@ import { policiesRouter } from "./routes/policies.js";
 import { employeesRouter } from "./routes/employees.js";
 import { claimsRouter } from "./routes/claims.js";
 import { auditRouter } from "./routes/audit.js";
-import { rateLimit } from "./middleware/rateLimit.js";
+import { rateLimit, authRateLimit } from "./middleware/rateLimit.js";
 import { requireApiKey } from "./middleware/apiKey.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
@@ -19,7 +19,7 @@ export function createApp() {
   app.get("/healthz", (_req, res) => res.json({ status: "ok" }));
 
   // Open: mint a sandbox key, and browse the reference policy catalogue.
-  app.use("/auth", authRouter);
+  app.use("/auth", authRateLimit, authRouter);
   app.use("/policies", policiesRouter);
 
   // Per-account sandbox — everything below requires a valid API key.

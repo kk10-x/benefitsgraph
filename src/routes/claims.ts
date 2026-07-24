@@ -4,6 +4,7 @@ import { pool } from "../db/pool.js";
 import { validateBody } from "../middleware/validate.js";
 import { idempotent } from "../middleware/idempotency.js";
 import { NotFoundError, BadRequestError } from "../utils/errors.js";
+import { accountIdOf } from "../middleware/apiKey.js";
 import { submitAndAdjudicateClaim } from "../services/claimService.js";
 
 export const claimsRouter = Router();
@@ -21,7 +22,7 @@ claimsRouter.post("/", idempotent(), validateBody(submitSchema), async (req, res
     if (!idempotencyKey) throw BadRequestError("Idempotency-Key header is required");
 
     const body = req.body as z.infer<typeof submitSchema>;
-    const claim = await submitAndAdjudicateClaim({ ...body, idempotencyKey, accountId: req.accountId! });
+    const claim = await submitAndAdjudicateClaim({ ...body, idempotencyKey, accountId: accountIdOf(req) });
 
     res.status(201).json(claim);
   } catch (err) {
@@ -34,7 +35,7 @@ claimsRouter.get("/:id", async (req, res, next) => {
     const result = await pool.query(
       `SELECT id, employee_id, claim_type, billed_amount_paise, status, approved_amount_paise, reason_codes, submitted_at, adjudicated_at
        FROM claims WHERE id = $1 AND account_id = $2`,
-      [req.params.id, req.accountId],
+      [req.params.id, accountIdOf(req)],
     );
     if (result.rows.length === 0) throw NotFoundError("Claim");
     res.json(result.rows[0]);

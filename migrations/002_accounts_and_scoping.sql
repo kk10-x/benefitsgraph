@@ -27,3 +27,13 @@ ALTER TABLE claims ADD CONSTRAINT claims_employee_id_fkey
 ALTER TABLE audit_log DROP CONSTRAINT IF EXISTS audit_log_claim_id_fkey;
 ALTER TABLE audit_log ADD CONSTRAINT audit_log_claim_id_fkey
   FOREIGN KEY (claim_id) REFERENCES claims(id) ON DELETE CASCADE;
+
+-- Enforce "every row belongs to an account" in the schema, not just in app code.
+-- Postgres treats NULLs as distinct in UNIQUE constraints, so an unscoped row would
+-- both bypass the uniqueness rules above and be invisible to every scoped query.
+-- Rows predating scoping can never be read under the new model, so they are removed
+-- rather than left as unreachable orphans (deleting claims cascades to audit_log).
+DELETE FROM claims WHERE account_id IS NULL;
+DELETE FROM employees WHERE account_id IS NULL;
+ALTER TABLE claims ALTER COLUMN account_id SET NOT NULL;
+ALTER TABLE employees ALTER COLUMN account_id SET NOT NULL;
