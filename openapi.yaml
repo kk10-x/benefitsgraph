@@ -21,7 +21,7 @@ info:
 
     ### Your sandbox
     Your key gives you an **isolated sandbox** — your enrolments and claims are yours
-    alone, so the example `EMP-1001` never collides with anyone else''s. Sandboxes are
+    alone, so the example `EMP-1001` never collides with anyone else's. Sandboxes are
     automatically **wiped 48 hours** after their last request, so demo data never piles up.
 
     ### Seeded policies
