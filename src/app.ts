@@ -12,6 +12,13 @@ import { errorHandler } from "./middleware/errorHandler.js";
 export function createApp() {
   const app = express();
 
+  // One reverse-proxy hop (Caddy) sits in front, so read the client address from
+  // X-Forwarded-For rather than the socket. NOTE: Tailscale Funnel does not preserve
+  // the original client IP, so on the public demo every request still arrives with the
+  // same forwarded address and the rate limits below behave as global budgets rather
+  // than per-client ones. Behind a normal reverse proxy they are genuinely per-IP.
+  app.set("trust proxy", 1);
+
   app.use(pinoHttp({ level: process.env.LOG_LEVEL ?? "info" }));
   app.use(express.json());
   app.use(rateLimit);

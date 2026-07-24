@@ -4,6 +4,7 @@ import { pool } from "../db/pool.js";
 import { validateBody } from "../middleware/validate.js";
 import { NotFoundError, ConflictError } from "../utils/errors.js";
 import { fetchPolicyStatus } from "../services/insurerClient.js";
+import { accountIdOf } from "../middleware/apiKey.js";
 
 export const employeesRouter = Router();
 
@@ -36,7 +37,7 @@ employeesRouter.post("/", validateBody(enrollSchema), async (req, res, next) => 
         `INSERT INTO employees (external_id, full_name, policy_id, account_id, waiting_period_ends_at)
          VALUES ($1, $2, $3, $4, CURRENT_DATE + $5::int)
          RETURNING id, external_id, full_name, policy_id, enrolled_at, waiting_period_ends_at`,
-        [externalId, fullName, policy.id, req.accountId, waitingDays],
+        [externalId, fullName, policy.id, accountIdOf(req), waitingDays],
       );
     } catch (err) {
       if ((err as { code?: string }).code === "23505") {
@@ -59,7 +60,7 @@ employeesRouter.get("/:externalId", async (req, res, next) => {
        FROM employees e
        JOIN policies p ON p.id = e.policy_id
        WHERE e.external_id = $1 AND e.account_id = $2`,
-      [req.params.externalId, req.accountId],
+      [req.params.externalId, accountIdOf(req)],
     );
     if (result.rows.length === 0) throw NotFoundError("Employee");
 
