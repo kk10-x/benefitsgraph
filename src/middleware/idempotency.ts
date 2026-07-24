@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { redis } from "../utils/redis.js";
-import { BadRequestError } from "../utils/errors.js";
+import { ApiError, BadRequestError } from "../utils/errors.js";
 
 const LOCK_TTL_SECONDS = 30;
 const RESULT_TTL_SECONDS = 60 * 60 * 24;
@@ -19,8 +19,14 @@ export function idempotent() {
       return next(BadRequestError("Idempotency-Key header is required"));
     }
 
-    const cacheKey = `idempotency:result:${key}`;
-    const lockKey = `idempotency:lock:${key}`;
+    // Scoped per account so one caller's Idempotency-Key can never replay another's
+    // response. idempotent() is only valid behind requireApiKey.
+    const scope = req.accountId;
+    if (!scope) {
+      return next(new ApiError(500, "INTERNAL_ERROR", "idempotent() requires requireApiKey upstream"));
+    }
+    const cacheKey = `idempotency:result:${scope}:${key}`;
+    const lockKey = `idempotency:lock:${scope}:${key}`;
 
     const cached = await redis.get(cacheKey);
     if (cached) {

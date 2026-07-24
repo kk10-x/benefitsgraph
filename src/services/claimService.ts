@@ -10,6 +10,7 @@ export type SubmitClaimInput = {
   billedAmountPaise: number;
   providerRef?: string;
   idempotencyKey: string;
+  accountId: string;
 };
 
 export async function submitAndAdjudicateClaim(input: SubmitClaimInput) {
@@ -17,8 +18,8 @@ export async function submitAndAdjudicateClaim(input: SubmitClaimInput) {
     `SELECT e.id, e.waiting_period_ends_at, p.id AS policy_id, p.rules
      FROM employees e
      JOIN policies p ON p.id = e.policy_id
-     WHERE e.external_id = $1`,
-    [input.employeeExternalId]
+     WHERE e.external_id = $1 AND e.account_id = $2`,
+    [input.employeeExternalId, input.accountId],
   );
 
   if (employeeRes.rows.length === 0) {
@@ -44,7 +45,7 @@ export async function submitAndAdjudicateClaim(input: SubmitClaimInput) {
        COALESCE(SUM(approved_amount_paise) FILTER (WHERE status IN ('approved','partial') AND claim_type = $2), 0) AS type_total
      FROM claims
      WHERE employee_id = $1 AND submitted_at >= date_trunc('year', now())`,
-    [employee.id, input.claimType]
+    [employee.id, input.claimType],
   );
 
   const priorApprovedAmountPaise = Number(priorRes.rows[0].total);
@@ -61,11 +62,12 @@ export async function submitAndAdjudicateClaim(input: SubmitClaimInput) {
 
   const insertRes = await pool.query(
     `INSERT INTO claims
-       (employee_id, claim_type, billed_amount_paise, provider_ref, status, approved_amount_paise, reason_codes, idempotency_key, adjudicated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, now())
+       (employee_id, account_id, claim_type, billed_amount_paise, provider_ref, status, approved_amount_paise, reason_codes, idempotency_key, adjudicated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, now())
      RETURNING id, status, approved_amount_paise, reason_codes, submitted_at, adjudicated_at`,
     [
       employee.id,
+      input.accountId,
       input.claimType,
       input.billedAmountPaise,
       input.providerRef ?? null,
@@ -73,14 +75,14 @@ export async function submitAndAdjudicateClaim(input: SubmitClaimInput) {
       result.approvedAmountPaise,
       result.reasonCodes,
       input.idempotencyKey,
-    ]
+    ],
   );
 
   const claim = insertRes.rows[0];
 
   await pool.query(
     `INSERT INTO audit_log (claim_id, event, detail) VALUES ($1, 'CLAIM_ADJUDICATED', $2)`,
-    [claim.id, JSON.stringify({ status: result.status, reasonCodes: result.reasonCodes, approvedAmountPaise: result.approvedAmountPaise })]
+    [claim.id, JSON.stringify({ status: result.status, reasonCodes: result.reasonCodes, approvedAmountPaise: result.approvedAmountPaise })],
   );
 
   return claim;

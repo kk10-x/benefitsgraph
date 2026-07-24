@@ -1,5 +1,7 @@
 # BenefitsGraph
 
+**Live demo:** <https://bella.taile86535.ts.net> — landing page, one-click guest sandbox, and an interactive API explorer at [`/docs`](https://bella.taile86535.ts.net/docs).
+
 A backend service that adjudicates employee health insurance claims against a versioned, per-employer policy rules engine — deductibles, co-pay, waiting periods, annual and sub-limits — with idempotent claim submission, a full audit trail, and integration against two independent mock upstream services (insurer + provider) with deliberately different schemas.
 
 ## Tech stack
@@ -36,6 +38,15 @@ This stack was chosen over a single-service design because it's what the target 
 - Redis-backed fixed-window rate limiting (works across horizontally scaled instances, not per-process)
 - Integration against two independent mock upstream services with differing schemas
 - 3 seeded employer policies with different rule shapes (deductible/co-pay plan, zero-cost-share premium plan, tightly capped basic plan)
+- One-click **guest API keys** (`POST /auth/guest`) — API-key auth with per-account data isolation, no signup or password
+- **Ephemeral sandboxes**: each key and all its data auto-prune 48h after last use (background sweeper), so the demo stays clean and holds no long-lived PII
+- Polished landing page plus an interactive Swagger UI at `/docs` with pre-filled request examples
+
+## Authentication & sandboxes
+
+Protected endpoints (`/employees`, `/claims`, `/audit`) require an API key sent as an `X-API-Key` header. `POST /auth/guest` mints an ephemeral key with **no signup and no password** — each key is an isolated sandbox, so two callers can enrol the same `externalId` without colliding. Keys and all their data are automatically pruned 48 hours after last use. `GET /policies` and `POST /auth/guest` are open.
+
+> The demo enforces the key at the application layer (`src/middleware/apiKey.ts`) — there is no > separate gateway password, so the access-control logic is visible in the codebase. Keys are stored > only as SHA-256 hashes, never in plaintext.
 
 ## Setup / run
 
@@ -75,10 +86,19 @@ See [`openapi.yaml`](./openapi.yaml), or paste it into the [Swagger Editor](http
 ### Example request
 
 ```bash
+# 1. Get a sandbox key (no signup)
+KEY=$(curl -s -X POST http://localhost:3000/auth/guest | jq -r .apiKey)
+
+# 2. Enrol an employee against a seeded policy
+curl -X POST http://localhost:3000/employees \
+  -H "X-API-Key: $KEY" -H "Content-Type: application/json" \
+  -d '{"externalId":"EMP-1001","fullName":"Ada Lovelace","employerName":"Contoso Labs","planName":"Premium"}'
+
+# 3. Submit a claim (denied WAITING_PERIOD_NOT_MET right after enrolment - the engine working)
 curl -X POST http://localhost:3000/claims \
-  -H "Content-Type: application/json" \
+  -H "X-API-Key: $KEY" -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
-  -d '{"employeeExternalId":"emp-1","claimType":"opd","billedAmountPaise":2000000}'
+  -d '{"employeeExternalId":"EMP-1001","claimType":"opd","billedAmountPaise":250000}'
 ```
 
 ## Stretch goals (not yet built)
