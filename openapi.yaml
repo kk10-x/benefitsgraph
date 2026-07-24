@@ -48,9 +48,22 @@ components:
 security:
   - ApiKeyAuth: []
 
+tags:
+  - name: Auth
+    description: Mint an ephemeral sandbox API key. No signup, no password, no key required to call this.
+  - name: Policies
+    description: Reference data — the employer/plan policies you can enrol against. Open, no key required.
+  - name: Employees
+    description: Enrol employees against a policy and read their enrolment. Scoped to your sandbox.
+  - name: Claims
+    description: Submit claims for adjudication (idempotent) and read them back.
+  - name: Audit
+    description: Append-only adjudication trail for each claim.
+
 paths:
   /auth/guest:
     post:
+      tags: [Auth]
       summary: Mint an ephemeral guest API key (no signup, no password)
       description: Returns a sandbox `apiKey`. Paste it into **Authorize**. The sandbox and all its data are wiped 48h after last use.
       security: []
@@ -59,6 +72,7 @@ paths:
 
   /policies:
     get:
+      tags: [Policies]
       summary: List available employer/plan policies to enrol against
       description: Discover valid `employerName` / `planName` values (and each plan's rules). Open — no key required.
       security: []
@@ -67,6 +81,7 @@ paths:
 
   /employees:
     post:
+      tags: [Employees]
       summary: Enroll an employee against an employer's policy
       description: The `employerName` / `planName` must match a policy from **GET /policies**, otherwise you get `404 Policy not found`.
       requestBody:
@@ -111,6 +126,7 @@ paths:
 
   /employees/{externalId}:
     get:
+      tags: [Employees]
       summary: Fetch an employee's enrollment and policy details
       parameters:
         - name: externalId
@@ -124,6 +140,7 @@ paths:
 
   /claims:
     post:
+      tags: [Claims]
       summary: Submit a claim for adjudication
       description: |
         Requires an **`Idempotency-Key`** header. Re-sending the same key replays the original
@@ -169,6 +186,7 @@ paths:
 
   /claims/{id}:
     get:
+      tags: [Claims]
       summary: Fetch a claim by id
       parameters:
         - name: id
@@ -182,6 +200,7 @@ paths:
 
   /audit/claims/{claimId}:
     get:
+      tags: [Audit]
       summary: Fetch the audit trail for a claim
       parameters:
         - name: claimId
