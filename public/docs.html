@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>API Explorer — BenefitsGraph</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
+<style>
+  :root{
+    --bg:#020617; --panel:#0b1220; --muted:#0f172a; --border:#1e293b;
+    --fg:#f8fafc; --dim:#94a3b8; --accent:#22c55e; --accent-2:#16a34a;
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f8fafc; --panel:#ffffff; --muted:#f1f5f9; --border:#e2e8f0;
+           --fg:#0f172a; --dim:#475569; --accent:#16a34a; --accent-2:#15803d; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  a{text-decoration:none}
+
+  /* ---- site header, matching the landing page ---- */
+  .site-header{position:sticky;top:0;z-index:60;backdrop-filter:blur(10px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent);border-bottom:1px solid var(--border)}
+  .nav{max-width:1200px;margin:0 auto;padding:0 24px;height:64px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:-.02em;font-size:18px;color:var(--fg)}
+  .brand .dot{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+    box-shadow:0 0 14px color-mix(in srgb,var(--accent) 55%,transparent);flex:none}
+  .nav-links{display:flex;align-items:center;gap:8px}
+  .nav-links a{padding:8px 14px;border-radius:10px;color:var(--dim);font-size:14px;font-weight:500;transition:color .2s,background .2s}
+  .nav-links a:hover{color:var(--fg);background:var(--muted)}
+  .nav-links a.cta{color:#04120a;background:var(--accent);font-weight:600}
+  .nav-links a.cta:hover{background:var(--accent-2)}
+
+  .hint{max-width:1200px;margin:22px auto 0;padding:0 24px}
+  .hint-inner{border:1px solid var(--border);background:var(--panel);border-radius:12px;padding:14px 18px;
+    color:var(--dim);font-size:14px;display:flex;gap:10px;align-items:flex-start}
+  .hint-inner b{color:var(--fg)}
+  .hint-inner .k{display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--accent);color:#04120a;
+    font-size:11px;font-weight:700;align-items:center;justify-content:center;margin-right:5px;vertical-align:1px}
+
+  /* ---- swagger theming ---- */
+  .swagger-ui{font-family:var(--sans);color:var(--fg)}
+  .swagger-ui .wrapper{max-width:1200px;padding:0 24px}
+  .swagger-ui .topbar{display:none}
+  .swagger-ui .info{margin:26px 0}
+  .swagger-ui .info .title,.swagger-ui .info p,.swagger-ui .info li,.swagger-ui .info h1,
+  .swagger-ui .info h2,.swagger-ui .info h3,.swagger-ui .info h4,.swagger-ui .info table,
+  .swagger-ui .info td,.swagger-ui .info th,.swagger-ui .info blockquote{color:var(--fg)}
+  .swagger-ui .info a{color:var(--accent)}
+  .swagger-ui .info code,.swagger-ui .renderedMarkdown code{background:var(--muted);color:var(--accent);
+    font-family:var(--mono);padding:2px 6px;border-radius:5px;font-size:12.5px}
+  .swagger-ui .info table{border-collapse:collapse}
+  .swagger-ui .info td,.swagger-ui .info th{border:1px solid var(--border);padding:7px 11px}
+  .swagger-ui .info blockquote{border-left:3px solid var(--accent);padding-left:14px;color:var(--dim)}
+
+  .swagger-ui .scheme-container{background:var(--panel);box-shadow:none;border:1px solid var(--border);
+    border-radius:12px;padding:16px;margin:18px 0}
+  .swagger-ui .btn{border-radius:9px;font-family:inherit;box-shadow:none}
+  .swagger-ui .btn.authorize{color:var(--accent);border-color:var(--accent);background:transparent}
+  .swagger-ui .btn.authorize svg{fill:var(--accent)}
+  .swagger-ui .btn.execute{background:var(--accent);border-color:var(--accent);color:#04120a;font-weight:600}
+  .swagger-ui .btn.cancel{background:transparent;border-color:var(--border);color:var(--fg)}
+  .swagger-ui .btn.try-out__btn{background:transparent;border-color:var(--border);color:var(--fg)}
+
+  .swagger-ui .opblock{background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    box-shadow:none;margin:0 0 14px}
+  .swagger-ui .opblock .opblock-summary{border-color:var(--border)}
+  .swagger-ui .opblock .opblock-summary-path,.swagger-ui .opblock .opblock-summary-path a,
+  .swagger-ui .opblock .opblock-summary-description,.swagger-ui .opblock .opblock-summary-operation-id
+    {color:var(--fg);font-family:var(--mono);font-size:13.5px}
+  .swagger-ui .opblock .opblock-summary-description{font-family:var(--sans);color:var(--dim)}
+  .swagger-ui .opblock.opblock-post{background:color-mix(in srgb,var(--accent) 6%,var(--panel));border-color:color-mix(in srgb,var(--accent) 34%,var(--border))}
+  .swagger-ui .opblock.opblock-get{background:color-mix(in srgb,#38bdf8 6%,var(--panel));border-color:color-mix(in srgb,#38bdf8 30%,var(--border))}
+  .swagger-ui .opblock-tag{color:var(--fg);border-color:var(--border)}
+  .swagger-ui .opblock-description-wrapper p,.swagger-ui .opblock-title_normal p,
+  .swagger-ui .opblock-section-header h4,.swagger-ui .opblock-section-header>label,
+  .swagger-ui .parameter__name,.swagger-ui .parameter__in,.swagger-ui .response-col_status,
+  .swagger-ui .response-col_description,.swagger-ui .response-col_links,
+  .swagger-ui table thead tr td,.swagger-ui table thead tr th,.swagger-ui .tab li,
+  .swagger-ui label,.swagger-ui .responses-inner h4,.swagger-ui .responses-inner h5{color:var(--fg)}
+  .swagger-ui .parameter__type,.swagger-ui .prop-format,.swagger-ui .parameter__in{color:var(--dim)}
+  .swagger-ui .opblock-section-header{background:var(--muted);border-color:var(--border);box-shadow:none}
+  .swagger-ui table tbody tr td{border-color:var(--border);color:var(--fg)}
+
+  .swagger-ui input[type=text],.swagger-ui input[type=password],.swagger-ui input[type=email],
+  .swagger-ui input[type=number],.swagger-ui textarea,.swagger-ui select{
+    background:var(--bg);color:var(--fg);border:1px solid var(--border);border-radius:8px;
+    font-family:var(--mono);font-size:13px}
+  .swagger-ui input:focus,.swagger-ui textarea:focus,.swagger-ui select:focus{
+    outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+  .swagger-ui textarea.body-param__text{min-height:170px}
+  .swagger-ui .microlight,.swagger-ui .highlight-code>.microlight{
+    background:var(--muted)!important;border:1px solid var(--border);border-radius:9px;
+    font-family:var(--mono)!important}
+  .swagger-ui .responses-inner{background:transparent}
+  .swagger-ui .response-control-media-type__title,.swagger-ui .model,.swagger-ui .model-title,
+  .swagger-ui .models h4,.swagger-ui .model-toggle{color:var(--fg)}
+  .swagger-ui section.models{background:var(--panel);border-color:var(--border);border-radius:12px}
+  .swagger-ui section.models .model-container{background:var(--muted);border-radius:9px}
+  .swagger-ui .dialog-ux .modal-ux{background:var(--panel);border:1px solid var(--border);border-radius:14px}
+  .swagger-ui .dialog-ux .modal-ux-header{border-color:var(--border)}
+  .swagger-ui .dialog-ux .modal-ux-header h3,.swagger-ui .dialog-ux .modal-ux-content h4,
+  .swagger-ui .dialog-ux .modal-ux-content p,.swagger-ui .dialog-ux .modal-ux-content label{color:var(--fg)}
+  .swagger-ui .dialog-ux .backdrop-ux{background:rgba(2,6,23,.72)}
+  .swagger-ui svg:not(:root){fill:var(--fg)}
+  .swagger-ui .expand-methods svg,.swagger-ui .expand-operation svg{fill:var(--dim)}
+  .swagger-ui .errors-wrapper{background:color-mix(in srgb,#ef4444 12%,var(--panel));border-color:#ef4444;border-radius:12px}
+  .swagger-ui .errors-wrapper .errors h4,.swagger-ui .errors-wrapper hgroup h4{color:var(--fg)}
+  .swagger-ui .loading-container .loading::after{color:var(--dim)}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="site-header">
+  <div class="nav">
+    <a class="brand" href="/"><span class="dot"></span> BenefitsGraph</a>
+    <nav class="nav-links">
+      <a href="/">Home</a>
+      <a href="https://github.com/kk10-x/benefitsgraph" target="_blank" rel="noopener">GitHub</a>
+      <a class="cta" href="/">Get a sandbox key</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hint">
+  <div class="hint-inner">
+    <div>
+      <b>Ready to try it?</b> <span class="k">1</span>Click <b>Authorize</b> below and paste your sandbox key
+      &nbsp;<span class="k">2</span>Pick any endpoint &nbsp;<span class="k">3</span>Edit the pre-filled example
+      &nbsp;<span class="k">4</span>Hit <b>Execute</b>.
+      <br />No key yet? Use <b>POST /auth/guest → Execute</b> right here — it returns one instantly, no signup.
+    </div>
+  </div>
+</div>
+
+<div id="swagger-ui"></div>
+
+<script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js" crossorigin></script>
+<script>
+  window.ui = SwaggerUIBundle({
+    url: "/openapi.yaml",
+    dom_id: "#swagger-ui",
+    presets: [SwaggerUIBundle.presets.apis],
+    layout: "BaseLayout",
+    tryItOutEnabled: true,
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    defaultModelsExpandDepth: -1,
+    // Operations render expanded with try-it-out already active, so the editable
+    // request fields are visible immediately — no "Try it out" click required.
+    docExpansion: "full",
+    supportedSubmitMethods: ["get", "post", "put", "patch", "delete"]
+  });
+</script>
+</body>
+</html>
