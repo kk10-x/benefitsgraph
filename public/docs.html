@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css" />
+<link rel="stylesheet" href="/vendor/swagger-ui.css" />
 <style>
   :root{
     --bg:#020617; --panel:#0b1220; --muted:#0f172a; --border:#1e293b;
@@ -140,8 +140,22 @@
 
 <div id="swagger-ui"></div>
 
-<script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js" crossorigin></script>
+<div id="loadFail" style="display:none;max-width:1200px;margin:24px auto;padding:0 24px">
+  <div style="border:1px solid #ef4444;background:color-mix(in srgb,#ef4444 10%,var(--panel));border-radius:12px;padding:16px 18px">
+    <b>The API explorer failed to load.</b>
+    <div style="color:var(--dim);font-size:14px;margin-top:6px">
+      The raw spec is still available at <a href="/openapi.yaml" style="color:var(--accent)">/openapi.yaml</a>,
+      and every endpoint works over plain HTTP — see the README for curl examples.
+    </div>
+  </div>
+</div>
+
+<!-- Vendored locally: no CDN dependency, so the explorer works on any network. -->
+<script src="/vendor/swagger-ui-bundle.js"></script>
 <script>
+  if (typeof SwaggerUIBundle === "undefined") {
+    document.getElementById("loadFail").style.display = "block";
+  } else {
   window.ui = SwaggerUIBundle({
     url: "/openapi.yaml",
     dom_id: "#swagger-ui",
@@ -156,6 +170,7 @@
     docExpansion: "full",
     supportedSubmitMethods: ["get", "post", "put", "patch", "delete"]
   });
+  }
 </script>
 </body>
 </html>
