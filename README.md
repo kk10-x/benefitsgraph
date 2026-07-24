@@ -1,7 +1,5 @@
 # BenefitsGraph
 
-**Live demo:** <https://bella.taile86535.ts.net> — landing page, one-click guest sandbox, and an interactive API explorer at [`/docs`](https://bella.taile86535.ts.net/docs).
-
 A backend service that adjudicates employee health insurance claims against a versioned, per-employer policy rules engine — deductibles, co-pay, waiting periods, annual and sub-limits — with idempotent claim submission, a full audit trail, and integration against two independent mock upstream services (insurer + provider) with deliberately different schemas.
 
 ## Tech stack
