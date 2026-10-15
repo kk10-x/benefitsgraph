@@ -102,7 +102,7 @@
   <div class="wrap nav">
     <div class="brand"><span class="dot"></span> BenefitsGraph</div>
     <nav class="nav-links">
-      <a href="/docs">API Docs</a>
+      <a href="docs">API Docs</a>
       <a class="gh" href="https://github.com/kk10-x/benefitsgraph" target="_blank" rel="noopener">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.9 10.9c.6.1.8-.2.8-.5v-2c-3.2.7-3.9-1.4-3.9-1.4-.5-1.3-1.3-1.7-1.3-1.7-1.1-.7 0-.7 0-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0C17 4.6 18 4.9 18 4.9c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.6.8.5A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5Z"/></svg>
         GitHub
@@ -121,7 +121,7 @@
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 3 14h7l-1 8 10-12h-7z"/></svg>
         Try as guest
       </button>
-      <a class="btn btn-ghost" href="/docs">Open API explorer</a>
+      <a class="btn btn-ghost" href="docs">Open API explorer</a>
     </div>
 
     <div class="keycard" id="keyPanel" hidden>
@@ -135,7 +135,7 @@
           <button class="copy" id="copyBtn" onclick="copyKey(this)">Copy</button>
         </div>
         <p class="keyhint">
-          <span><span class="num">1</span>Open the <b><a href="/docs" style="color:var(--accent)">API explorer</a></b> &nbsp; <span class="num">2</span>Click <b>Authorize</b> &nbsp; <span class="num">3</span>Paste this key &nbsp; <span class="num">4</span>Try any endpoint.</span>
+          <span><span class="num">1</span>Open the <b><a href="docs" style="color:var(--accent)">API explorer</a></b> &nbsp; <span class="num">2</span>Click <b>Authorize</b> &nbsp; <span class="num">3</span>Paste this key &nbsp; <span class="num">4</span>Try any endpoint.</span>
           <br /><br />Send it as the <b>X-API-Key</b> header. Your data is isolated and auto-deletes 48h after last use.
         </p>
       </div>
@@ -181,7 +181,7 @@
 <footer>
   <div class="wrap foot">
     <span>BenefitsGraph — a portfolio demo. Sandboxes reset every 48h.</span>
-    <span><a href="/docs">API Docs</a> &nbsp;·&nbsp; <a href="https://github.com/kk10-x/benefitsgraph" target="_blank" rel="noopener">Source on GitHub</a></span>
+    <span><a href="docs">API Docs</a> &nbsp;·&nbsp; <a href="https://github.com/kk10-x/benefitsgraph" target="_blank" rel="noopener">Source on GitHub</a></span>
   </div>
 </footer>
 
@@ -191,7 +191,7 @@
     const original = btn.innerHTML;
     btn.textContent = "Minting sandbox…";
     try{
-      const res = await fetch("/auth/guest", { method:"POST" });
+      const res = await fetch("auth/guest", { method:"POST" });
       if(!res.ok) throw new Error("http "+res.status);
       const data = await res.json();
       document.getElementById("keyVal").textContent = data.apiKey;

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/vendor/swagger-ui.css" />
+<link rel="stylesheet" href="vendor/swagger-ui.css" />
 <style>
   :root{
     --bg:#020617; --panel:#0b1220; --muted:#0f172a; --border:#1e293b;
@@ -134,11 +134,11 @@
 <body>
 <header class="site-header">
   <div class="nav">
-    <a class="brand" href="/"><span class="dot"></span> BenefitsGraph</a>
+    <a class="brand" href="./"><span class="dot"></span> BenefitsGraph</a>
     <nav class="nav-links">
-      <a href="/">Home</a>
+      <a href="./">Home</a>
       <a href="https://github.com/kk10-x/benefitsgraph" target="_blank" rel="noopener">GitHub</a>
-      <a class="cta" href="/">Get a sandbox key</a>
+      <a class="cta" href="./">Get a sandbox key</a>
     </nav>
   </div>
 </header>
@@ -160,20 +160,20 @@
   <div style="border:1px solid #ef4444;background:color-mix(in srgb,#ef4444 10%,var(--panel));border-radius:12px;padding:16px 18px">
     <b>The API explorer failed to load.</b>
     <div style="color:var(--dim);font-size:14px;margin-top:6px">
-      The raw spec is still available at <a href="/openapi.yaml" style="color:var(--accent)">/openapi.yaml</a>,
+      The raw spec is still available at <a href="openapi.yaml" style="color:var(--accent)">/openapi.yaml</a>,
       and every endpoint works over plain HTTP — see the README for curl examples.
     </div>
   </div>
 </div>
 
 <!-- Vendored locally: no CDN dependency, so the explorer works on any network. -->
-<script src="/vendor/swagger-ui-bundle.js"></script>
+<script src="vendor/swagger-ui-bundle.js"></script>
 <script>
   if (typeof SwaggerUIBundle === "undefined") {
     document.getElementById("loadFail").style.display = "block";
   } else {
   window.ui = SwaggerUIBundle({
-    url: "/openapi.yaml",
+    url: "openapi.yaml",
     dom_id: "#swagger-ui",
     presets: [SwaggerUIBundle.presets.apis],
     layout: "BaseLayout",
